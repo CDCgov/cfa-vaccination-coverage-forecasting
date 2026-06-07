@@ -14,6 +14,10 @@ run_id = config["run_id"]
 
 output_dir = Path("output") / run_id
 config_copy = output_dir / "config.yaml"
+raw_data = Path("data") / "raw.parquet"
+data = output_dir / "data.parquet"
+pred_dir = output_dir / "pred"
+scores = output_dir / "scores.parquet"
 
 rules = [
     # {"output": "all", "input": config_copy},
@@ -24,40 +28,6 @@ rules = [
     },
 ]
 
-
-def make(rules):
-    lines = []
-    for rule in rules:
-        lines.append(f"{rule['output']}: {rule['input']}")
-        if "action" in rule:
-            lines.append("\t" + rule["action"])
-        lines.append("")
-
-    makefile = "\n".join(lines)
-
-    print(makefile)
-
-    with tempfile.NamedTemporaryFile("w+t") as f:
-        f.write(makefile)
-        f.flush()
-
-        subprocess.run(["make", "--makefile", f.name] + sys.argv[1:])
-
-
-if __name__ == "__main__":
-    make(rules)
-
-
-# CONFIG = "scripts/config_vignette.yaml"
-# RAW_DATA = data/raw.parquet
-
-# RUN_ID = $(shell python scripts/get_run_id.py --config=$(CONFIG))
-
-# OUTPUT_DIR = output/$(RUN_ID)
-# CONFIG_COPY = $(OUTPUT_DIR)/config.yaml
-# DATA = $(OUTPUT_DIR)/data.parquet
-# PRED_DIR = $(OUTPUT_DIR)/pred
-# SCORES = $(OUTPUT_DIR)/scores.parquet
 
 # # each plotting script outputs multiple files; use a single output as a flag
 # PLOT_DATA = $(OUTPUT_DIR)/plots/.data.checkpoint
@@ -106,3 +76,26 @@ if __name__ == "__main__":
 
 # clean:
 # 	rm -rf $(OUTPUT_DIR)
+
+
+def make(rules):
+    lines = []
+    for rule in rules:
+        lines.append(f"{rule['output']}: {rule['input']}")
+        if "action" in rule:
+            lines.append("\t" + rule["action"])
+        lines.append("")
+
+    makefile = "\n".join(lines)
+
+    print(makefile)
+
+    with tempfile.NamedTemporaryFile("w+t") as f:
+        f.write(makefile)
+        f.flush()
+
+        subprocess.run(["make", "--makefile", f.name] + sys.argv[1:])
+
+
+if __name__ == "__main__":
+    make(rules)
