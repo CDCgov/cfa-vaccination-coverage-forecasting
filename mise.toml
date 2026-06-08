@@ -1,2 +1,2 @@
 [tasks.dg]
-run = "DAGSTER_HOME=$(pwd -P)/.dagster_home dg launch --assets '*'"
+run = "DAGSTER_HOME=$(pwd -P)/.dagster_home dg launch --assets 'data'"
