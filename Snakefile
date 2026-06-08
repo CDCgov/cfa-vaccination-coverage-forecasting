@@ -2,7 +2,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-
+import scripts.preprocess, scripts.plot_scores
 import polars as pl
 import yaml
 
@@ -39,6 +39,9 @@ preds = [pred_dir / f"forecast_date={x}" / "part-0.parquet" for x in forecast_da
 rule all:
     input:
         config_copy,
+        plot_data,
+        plot_preds,
+        plot_scores,
 
 
 rule:
@@ -57,8 +60,8 @@ rule plot_scores:
         config_path,
     output:
         plot_scores,
-    shell:
-        f"python scripts/plot_scores.py --scores={scores} --config={config_path} --output={plot_scores}"
+    run:
+        scripts.plot_scores.plot_scores(scores=scores, output=output)
 
 
 rule plot_preds:
@@ -103,8 +106,10 @@ rule data:
         config_path,
     output:
         data,
-    shell:
-        f"python scripts/preprocess.py --config={config_path} --input={raw_data} output={data}"
+    run:
+        scripts.preprocess.preprocess(
+            config_path=config_path, data_path=raw_data, output=output
+        )
 
 
 rule clean:

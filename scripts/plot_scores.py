@@ -3,26 +3,16 @@ from pathlib import Path
 
 import altair as alt
 import polars as pl
-import yaml
 
 LINE_OPACITY = 0.4
 
 # scores across seasons & states
 
-if __name__ == "__main__":
-    p = argparse.ArgumentParser()
-    p.add_argument("--scores", required=True)
-    p.add_argument("--config", required=True)
-    p.add_argument("--output", required=True)
 
-    args = p.parse_args()
+def plot_scores(scores, output):
+    scores = pl.read_parquet(scores)
 
-    with open(args.config) as f:
-        config = yaml.safe_load(f)
-
-    scores = pl.read_parquet(args.scores)
-
-    out_flag = Path(args.output)
+    out_flag = Path(output)
     out_dir = out_flag.parent
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -40,7 +30,15 @@ if __name__ == "__main__":
 
     # Filter for the final forecast date and use the gather_n function to
     # make plots with ticks
-
     line_chart.save(out_dir / "scores.svg")
 
     out_flag.touch()
+
+
+if __name__ == "__main__":
+    p = argparse.ArgumentParser()
+    p.add_argument("--scores", required=True)
+    p.add_argument("--output", required=True)
+    args = p.parse_args()
+
+    plot_scores(scores=args.scores, output=args.output)

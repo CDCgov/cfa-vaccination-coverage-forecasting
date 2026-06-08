@@ -8,7 +8,7 @@ import yaml
 from vcf import to_season
 
 
-def preprocess(
+def clean_data(
     raw_data: pl.DataFrame,
     start_year: int,
     end_year: int,
@@ -79,22 +79,16 @@ def preprocess(
     )
 
 
-if __name__ == "__main__":
-    p = argparse.ArgumentParser()
-    p.add_argument("--config", help="config file", required=True)
-    p.add_argument("--input", required=True)
-    p.add_argument("--output", help="output parquet file", required=True)
-    args = p.parse_args()
-
-    with open(args.config) as f:
+def preprocess(config_path, data_path, output):
+    with open(config_path) as f:
         config = yaml.safe_load(f)
 
-    raw_data = pl.read_parquet(args.input)
+    raw_data = pl.read_parquet(data_path)
 
     assert isinstance(config, dict)
     geographies = config.get("geographies", None)
 
-    clean_data = preprocess(
+    data = clean_data(
         raw_data,
         start_year=config["season"]["start_year"],
         end_year=config["season"]["end_year"],
@@ -105,9 +99,18 @@ if __name__ == "__main__":
         geographies=geographies,
     )
 
-    if clean_data.height == 0:
+    if data.height == 0:
         raise RuntimeError("No data after preprocessing")
 
     # ensure output directory exists
-    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-    clean_data.write_parquet(args.output)
+    Path(output).parent.mkdir(parents=True, exist_ok=True)
+    data.write_parquet(output)
+
+
+if __name__ == "__main__":
+    p = argparse.ArgumentParser()
+    p.add_argument("--config", help="config file", required=True)
+    p.add_argument("--input", required=True)
+    p.add_argument("--output", help="output parquet file", required=True)
+    args = p.parse_args()
+    preprocess(config_path=args.config, data_path=args.input, output=args.output)
