@@ -204,4 +204,4 @@ cython_debug/
 
 output/
 *.yaml
-.snakemake/
+.dagster_home/

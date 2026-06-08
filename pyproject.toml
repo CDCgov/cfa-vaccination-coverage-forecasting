@@ -29,6 +29,7 @@ build-backend = "hatchling.build"
 dev = [
     "dagster>=1.13.8",
     "dagster-dg-cli>=1.13.8",
+    "dagster-webserver>=1.13.8",
     "pytest>=9.0.3",
     "snakefmt>=2.0.1",
 ]
