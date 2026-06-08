@@ -27,9 +27,10 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
+    "dagster>=1.13.8",
+    "dagster-dg-cli>=1.13.8",
     "pytest>=9.0.3",
     "snakefmt>=2.0.1",
-    "snakemake>=9.22.0",
 ]
 mkdocs = [
     "mkdocs>=1.6.1",
@@ -37,3 +38,7 @@ mkdocs = [
     "mkdocstrings>=1.0.0",
     "mkdocstrings-python>=2.0.1",
 ]
+
+[tool.dg]
+directory_type = "project"
+project.root_module = "vcf"
