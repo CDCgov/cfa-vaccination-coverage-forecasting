@@ -3,6 +3,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+import polars as pl
 import yaml
 
 config_path = "scripts/config_vignette.yaml"
@@ -12,76 +13,90 @@ with open(config_path) as f:
 
 run_id = config["run_id"]
 
+forecast_dates = pl.date_range(
+    config["forecast_dates"]["start"],
+    config["forecast_dates"]["end"],
+    config["forecast_dates"]["interval"],
+    eager=True,
+)
+
 output_dir = Path("output") / run_id
 config_copy = output_dir / "config.yaml"
 raw_data = Path("data") / "raw.parquet"
 data = output_dir / "data.parquet"
 pred_dir = output_dir / "pred"
 scores = output_dir / "scores.parquet"
+plot_dir = output_dir / "plots"
+plot_data = plot_dir / ".data.checkpoint"
+plot_preds = plot_dir / ".preds.checkpoint"
+plot_scores = plot_dir / ".scores.checkpoint"
+preds = [pred_dir / f"forecast_date={x}" / "part-0.parquet" for x in forecast_dates]
+fits = [output_dir / "fits" / f"fit_{x}.pkl" for x in forecast_dates]
 
-rules = [
-    # {"output": "all", "input": config_copy},
-    {
-        "output": config_copy,
-        "input": config_path,
-        "action": f"cp {config_path} {config_copy}",
-    },
-]
-
-
-# # each plotting script outputs multiple files; use a single output as a flag
-# PLOT_DATA = $(OUTPUT_DIR)/plots/.data.checkpoint
-# PLOT_PREDS = $(OUTPUT_DIR)/plots/.preds.checkpoint
-# PLOT_SCORES = $(OUTPUT_DIR)/plots/.scores.checkpoint
-
-# # dynamically find forecast dates to use
-# FORECAST_DATES = $(shell python scripts/get_forecast_dates.py --config=$(CONFIG))
-# PREDS = $(foreach date,$(FORECAST_DATES),$(PRED_DIR)/forecast_date=$(date)/part-0.parquet)
-# FITS = $(foreach date,$(FORECAST_DATES),$(OUTPUT_DIR)/fits/fit_$(date).pkl)
-
-# # This variable because the pattern `forecast_date=2020-01-01` confuses make.
-# # It thinks `=%` is variable assignment, not pattern matching.
-# # So we need `forecast_date$(EQ)%`.
-# EQ = =
-
-# .PHONY: clean viz dx
-
-# all: $(CONFIG_COPY) $(PLOT_DATA) $(PLOT_PREDS) $(PLOT_SCORES) $(FITS)
-
-# $(PLOT_SCORES): scripts/plot_scores.py $(SCORES) $(CONFIG)
-# 	python $< --scores=$(SCORES) --config=$(CONFIG) --output=$@
-
-# $(PLOT_PREDS): scripts/plot_preds.py $(CONFIG) $(DATA) $(PREDS)
-# 	python $< --config=$(CONFIG) --data=$(DATA) --preds=$(PRED_DIR) --output=$@
-
-# $(PLOT_DATA): scripts/plot_data.py $(DATA) $(CONFIG)
-# 	python $< --config=$(CONFIG) --data=$(DATA) --output=$@
-
-# $(SCORES): scripts/eval.py $(PREDS) $(DATA) $(CONFIG)
-# 	python $< --preds=$(PRED_DIR) --data=$(DATA) --config=$(CONFIG) --output=$@
-
-# # output/run_id/pred/forecast_date=2021-01-01/part-0.parquet <== output/fits/fit_2021-01-01.pkl
-# $(PRED_DIR)/forecast_date$(EQ)%/part-0.parquet: scripts/predict.py $(OUTPUT_DIR)/fits/fit_%.pkl
-# 	python $< --fits=$(OUTPUT_DIR)/fits/fit_$*.pkl --config=$(CONFIG) --output=$@
-
-# $(OUTPUT_DIR)/fits/fit_%.pkl: scripts/fit.py $(DATA) $(CONFIG)
-# 	python $< --data=$(DATA) --forecast_date=$* --config=$(CONFIG) --output=$@
-
-# $(DATA): scripts/preprocess.py $(RAW_DATA) $(CONFIG)
-# 	python $< --config=$(CONFIG) --input=$(RAW_DATA) --output=$@
-
-# $(CONFIG_COPY): $(CONFIG)
-# 	mkdir -p $(OUTPUT_DIR)
-# 	cp $(CONFIG) $@
-
-# clean:
-# 	rm -rf $(OUTPUT_DIR)
+rules = (
+    [
+        {"output": "all", "input": config_copy},
+        {
+            "output": config_copy,
+            "input": config_path,
+            "action": f"cp {config_path} {config_copy}",
+        },
+        {
+            "output": plot_scores,
+            "input": ["scripts/plot_scores.py", scores, config_path],
+            "action": f"python scripts/plot_scores.py --scores={scores} --config={config_path} --output={plot_scores}",
+        },
+        {
+            "output": plot_preds,
+            "input": ["scripts/plot_preds.py", config_path, data] + preds,
+            "action": f"python scripts/plot_preds.py --config={config_path} --data={data} --preds={pred_dir} --output={plot_preds}",
+        },
+        {
+            "output": plot_data,
+            "input": ["scripts/plot_data.py", data, config_path],
+            "action": f"python scripts/plot_data.py --config={config_path} --data={data} --output={plot_data}",
+        },
+        {
+            "output": scores,
+            "input": ["scripts/eval.py", data, config_path] + preds,
+            "action": f"python scripts/eval.py --config={config_path} --data={data} --output={scores}",
+        },
+        {
+            "output": data,
+            "input": ["scripts/preprocess.py", raw_data, config_path],
+            "action": f"python scripts/preprocess.py --config={config_path} --input={raw_data} output={data}",
+        },
+        {"output": "clean", "action": f"rm -rf {output_dir}"},
+    ]
+    + [
+        {
+            "output": pred,
+            "input": ["scripts/predict.py", fit],
+            "action": f"python scripts/predict.py --fits={fit} --config={config_path} --output={pred}",
+        }
+        for pred, fit in zip(preds, fits)
+    ]
+    + [
+        {
+            "output": fit,
+            "input": ["scripts/fit.py", data, config_path],
+            "action": f"python scripts/fit.py --data={data} --config={config_path} --output={fit} --forecast_date={date}",
+        }
+        for fit, date in zip(fits, forecast_dates)
+    ]
+)
 
 
 def make(rules):
     lines = []
     for rule in rules:
-        lines.append(f"{rule['output']}: {rule['input']}")
+        line = str(rule["output"]) + ":"
+        if "input" in rule:
+            if isinstance(rule["input"], (str, Path)):
+                line += " " + str(rule["input"])
+            elif isinstance(rule["input"], list):
+                line += " " + " ".join([str(x) for x in rule["input"]])
+        lines.append(line)
         if "action" in rule:
             lines.append("\t" + rule["action"])
         lines.append("")

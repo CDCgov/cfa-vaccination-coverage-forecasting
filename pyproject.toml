@@ -27,7 +27,6 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
-    "doit>=0.37.0",
     "pytest>=9.0.3",
 ]
 mkdocs = [
