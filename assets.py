@@ -7,7 +7,7 @@ import yaml
 
 import scripts.preprocess
 
-repo_dir = Path(__file__).parent.parent.parent
+repo_dir = Path(__file__).parent
 raw_data_path = repo_dir / "data" / "raw.parquet"
 config_path = repo_dir / "scripts" / "config_vignette.yaml"
 output = "output/vignette/data.parquet"
