@@ -32,6 +32,9 @@ models:
       num_samples: 500
       num_chains: 4
       progress_bar: false
+  - name: RFModel
+    params:
+      n_estimators: 100
 
 forecast_dates:
   start: 2021-07-01
