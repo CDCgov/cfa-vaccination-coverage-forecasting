@@ -19,6 +19,7 @@ dependencies = [
     "numpyro>=0.16.1,<0.17",
     "jax>=0.5.0,<0.6",
     "scipy>=1.15.3",
+    "pre-commit>=4.6.0",
 ]
 
 [build-system]
