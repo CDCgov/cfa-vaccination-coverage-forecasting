@@ -29,12 +29,7 @@ if __name__ == "__main__":
     forecast_start = config["forecast_dates"]["start"]
     forecast_end = config["forecast_dates"]["end"]
 
-    # are universe and forecast bounds ordered?
-    assert data_start < data_end
-    assert forecast_start <= forecast_end
-    # are forecast dates inside the data dates?
-    assert data_start <= forecast_start
-    assert forecast_end <= data_end
+    assert data_start <= forecast_start <= forecast_end <= data_end
 
     forecast_dates = pl.date_range(
         forecast_start,
