@@ -12,24 +12,33 @@ if __name__ == "__main__":
     with open(args.config) as f:
         config = yaml.safe_load(f)
 
-    first_date = date(
+    # start and end dates of all included data
+    data_start = date(
         config["season"]["start_year"],
         config["season"]["start_month"],
         config["season"]["start_day"],
     )
 
-    last_date = date(
+    data_end = date(
         config["season"]["end_year"],
         config["season"]["end_month"],
         config["season"]["end_day"],
     )
 
-    assert config["forecast_dates"]["start"] >= first_date
-    assert config["forecast_dates"]["end"] <= last_date
+    # first and last forecast dates
+    forecast_start = config["forecast_dates"]["start"]
+    forecast_end = config["forecast_dates"]["end"]
+
+    # are universe and forecast bounds ordered?
+    assert data_start < data_end
+    assert forecast_start <= forecast_end
+    # are forecast dates inside the data dates?
+    assert data_start <= forecast_start
+    assert forecast_end <= data_end
 
     forecast_dates = pl.date_range(
-        config["forecast_dates"]["start"],
-        config["forecast_dates"]["end"],
+        forecast_start,
+        forecast_end,
         config["forecast_dates"]["interval"],
         eager=True,
     )
