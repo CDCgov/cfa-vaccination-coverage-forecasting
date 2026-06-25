@@ -1,4 +1,5 @@
 import argparse
+from datetime import date
 from pathlib import Path
 from typing import List, Optional
 
@@ -93,6 +94,26 @@ if __name__ == "__main__":
 
     assert isinstance(config, dict)
     geographies = config.get("geographies", None)
+
+    data_start = raw_data["time_end"].min()
+    data_end = raw_data["time_end"].max()
+
+    # ensure data from config is within the available data range #
+    assert (
+        date(
+            config["season"]["start_year"],
+            config["season"]["start_month"],
+            config["season"]["start_day"],
+        )
+        >= data_start
+    ) and (
+        date(
+            config["season"]["end_year"],
+            config["season"]["end_month"],
+            config["season"]["end_day"],
+        )
+        <= data_end
+    )
 
     clean_data = preprocess(
         raw_data,
