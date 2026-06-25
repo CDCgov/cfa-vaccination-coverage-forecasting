@@ -23,13 +23,11 @@ if __name__ == "__main__":
         config["season"]["start_year"],
         config["season"]["start_month"],
         config["season"]["start_day"],
-    ):
-        print("forecast date out of data range. ")
-    elif forecast_dates[-1] > date(
+    ) or forecast_dates[-1] > date(
         config["season"]["end_year"],
         config["season"]["end_month"],
         config["season"]["end_day"],
     ):
-        print("forecast date out of data range. ")
+        print("forecast date out of data range.")
     else:
         print(*forecast_dates, sep=" ")
