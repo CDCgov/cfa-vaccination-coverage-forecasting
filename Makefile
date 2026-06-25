@@ -1,4 +1,4 @@
-CONFIG = scripts/config_full.yaml
+CONFIG = scripts/config_vignette.yaml
 RAW_DATA = data/raw.parquet
 
 RUN_ID = $(shell python scripts/get_run_id.py --config=$(CONFIG))
