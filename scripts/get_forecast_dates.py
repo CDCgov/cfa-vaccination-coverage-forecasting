@@ -19,14 +19,18 @@ if __name__ == "__main__":
         eager=True,
     )
 
-    if forecast_dates[0] < date(
+    first_season_date = date(
         config["season"]["start_year"],
         config["season"]["start_month"],
         config["season"]["start_day"],
-    ) or forecast_dates[-1] > date(
+    )
+    last_season_date = date(
         config["season"]["end_year"],
         config["season"]["end_month"],
         config["season"]["end_day"],
+    )
+    if (forecast_dates[0] < first_season_date) or (
+        forecast_dates[-1] > last_season_date
     ):
         print("forecast date out of data range.")
     else:
