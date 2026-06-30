@@ -38,12 +38,10 @@ models:
 
 forecast_dates:
   start: 2021-07-01
-  end: 2022-04-01
+  end: 2022-03-01
   interval: 1mo
 
 alpha: 0.05
 
 plots:
   example_season: "2020/2021"
-  example_geos: ["New Jersey"]
-  n_trajectories: 20
