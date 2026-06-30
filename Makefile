@@ -19,6 +19,10 @@ FORECAST_DATES = $(shell python scripts/get_forecast_dates.py --config=$(CONFIG)
 PREDS = $(foreach date,$(FORECAST_DATES),$(PRED_DIR)/forecast_date=$(date)/part-0.parquet)
 FITS = $(foreach date,$(FORECAST_DATES),$(OUTPUT_DIR)/fits/fit_$(date).pkl)
 
+ifeq ($(FORECAST_DATES),forecast date out of data range.)
+$(error forecast date out of data range, check config)
+endif
+
 # This variable because the pattern `forecast_date=2020-01-01` confuses make.
 # It thinks `=%` is variable assignment, not pattern matching.
 # So we need `forecast_date$(EQ)%`.
