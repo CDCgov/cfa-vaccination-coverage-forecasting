@@ -20,6 +20,8 @@ from sklearn.impute import KNNImputer
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 from typing_extensions import Self
 
+SCORE_COLS = ["model", "forecast_date", "score_fun", "score_value"]
+
 
 def to_season(
     date: pl.Expr,
@@ -64,6 +66,23 @@ def to_season(
     return pl.when(sy1.is_null()).then(None).otherwise(pl.format("{}/{}", sy1, sy1 + 1))
 
 
+def mspe(
+    obs: pl.DataFrame,
+    pred: pl.DataFrame,
+    features: list[str],
+) -> pl.DataFrame:
+    return (
+        pred.filter(pl.col("quantile") == 0.5)
+        .join(obs, on=["time_end"] + features, how="right")
+        .rename({"estimate_right": "obs", "estimate": "pred"})
+        .with_columns(score_value=(pl.col("obs") - pl.col("pred")) ** 2)
+        .group_by(["model", "forecast_date"] + features)
+        .agg(pl.col("score_value").mean())
+        .with_columns(score_fun=pl.lit("mspe"))
+        .select(features + SCORE_COLS)
+    )
+
+
 def eos_abs_diff(
     obs: pl.DataFrame, pred: pl.DataFrame, features: list[str]
 ) -> pl.DataFrame:
@@ -91,7 +110,7 @@ def eos_abs_diff(
             score_value=(pl.col("pred") - pl.col("obs")).abs(),
             score_fun=pl.lit("eos_abs_diff"),
         )
-        .select(features + ["model", "forecast_date", "score_fun", "score_value"])
+        .select(features + SCORE_COLS)
         .drop_nulls()
     )
 
@@ -581,8 +600,8 @@ class RFModel(CoverageModel):
         Returns:
             Long-format forecast data frame with quantile-specific estimates.
         """
-        # make the forecast
-        data_pred = self.data.filter(pl.col("season") >= self.forecast_season)
+        # make the in-sample prediction and out-of-sample forecast
+        data_pred = self.data
 
         X_data = data_pred.select(self.X_features)
         assert X_data.shape[0] > 0, f"RF prediction for {self.forecast_date} failed."

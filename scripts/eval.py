@@ -40,4 +40,23 @@ if __name__ == "__main__":
         features=["season", "geography"],
     )
 
-    eos_abs_diff.write_parquet(args.output)
+    # evaluate in-sample fitting #
+    forecast_dates = pl.date_range(
+        config["forecast_dates"]["start"],
+        config["forecast_dates"]["end"],
+        config["forecast_dates"]["interval"],
+        eager=True,
+    )
+
+    mspes = pl.DataFrame()
+
+    for date in forecast_dates:
+        mspe = vcf.mspe(
+            obs=data.filter(pl.col("time_end") <= date),
+            pred=pred.filter(pl.col("time_end") <= date),
+            features=["season", "geography"],
+        )
+        mspes = pl.concat([mspes, mspe])
+
+    scores = pl.concat([eos_abs_diff, mspes])
+    scores.write_parquet(args.output)
