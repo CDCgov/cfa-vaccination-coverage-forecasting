@@ -11,6 +11,48 @@ import vcf
 LINE_OPACITY = 0.4
 
 
+def plot_data_cone(
+    chart_data: pl.DataFrame,
+    facet_kwargs: dict,
+    out_dir: str,
+    filename: str,
+    properties_kwargs: dict | None = None,
+    config_legend_kwargs: dict | None = None,
+    config_axis_kwargs: dict | None = None,
+):
+    base = alt.Chart(chart_data).encode(
+        alt.X("time_end", title=None, axis=alt.Axis(format="%b"))
+    )
+    fc_cone = base.mark_area(opacity=0.25).encode(
+        alt.Y("pred_lci", title="", axis=AXIS_PERCENT),
+        alt.Y2("pred_uci"),
+        alt.Color("model"),
+    )
+    fc_points = base.mark_line(opacity=0.75).encode(
+        alt.Y("pred_estimate"), alt.Color("model")
+    )
+    data_points = base.mark_point(color="black").encode(alt.Y("obs_estimate"))
+    data_error = base.mark_rule(color="black").encode(
+        alt.X2("time_end"), alt.Y("obs_lci"), alt.Y2("obs_uci")
+    )
+
+    out_path = Path(out_dir) / filename
+    chart = fc_cone + fc_points + data_points + data_error
+
+    if properties_kwargs:
+        chart = chart.properties(**properties_kwargs)
+
+    chart = chart.facet(**facet_kwargs)
+
+    if config_axis_kwargs:
+        chart = chart.configure_axis(**config_axis_kwargs)
+
+    if config_legend_kwargs:
+        chart = chart.configure_legend(**config_legend_kwargs)
+
+    chart.save(out_path)
+
+
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--config", required=True)
@@ -89,24 +131,77 @@ if __name__ == "__main__":
         preds, on=["model", "geography", "forecast_date", "time_end"], how="left"
     )
 
-    base = alt.Chart(chart_data).encode(
-        alt.X("time_end", title=None, axis=alt.Axis(format="%b"))
-    )
-    fc_cone = base.mark_area(opacity=0.25).encode(
-        alt.Y("pred_lci", title="Coverage", axis=AXIS_PERCENT),
-        alt.Y2("pred_uci"),
-        alt.Color("model"),
-    )
-    fc_points = base.mark_line(opacity=0.75).encode(
-        alt.Y("pred_estimate"), alt.Color("model")
-    )
-    data_points = base.mark_point(color="black").encode(alt.Y("obs_estimate"))
-    data_error = base.mark_rule(color="black").encode(
-        alt.X2("time_end"), alt.Y("obs_lci"), alt.Y2("obs_uci")
+    ## forecast all ##
+    plot_data_cone(
+        chart_data=chart_data,
+        facet_kwargs={
+            "column": "forecast_date",
+            "row": "geography",
+        },
+        out_dir=out_dir,
+        filename="forecast.svg",
     )
 
-    (fc_cone + fc_points + data_points + data_error).facet(
-        column="forecast_date", row="geography"
-    ).save(out_dir / "forecast.svg")
+    ## forecast the entire season at the beginning of the season ##
+    plot_data_cone(
+        chart_data=chart_data.filter(
+            pl.col("forecast_date") == pl.col("forecast_date").min()
+        ),
+        facet_kwargs={
+            "facet": alt.Facet(
+                "geography", title="", header=alt.Header(labelFontSize=20)
+            ),
+            "columns": 6,
+        },
+        properties_kwargs={"width": 300, "height": 200},
+        config_axis_kwargs={"labelFontSize": 20, "titleFontSize": 24},
+        config_legend_kwargs={"labelFontSize": 20, "title": None},
+        out_dir=out_dir,
+        filename="forecast_entire_season.svg",
+    )
+
+    ## forecast the good state and bad state in LPLModel ##
+    plot_data_cone(
+        chart_data=chart_data.filter(
+            pl.col("geography").is_in(["South Dakota", "North Dakota"]),
+            pl.col("model") == pl.lit("LPLModel"),
+        ),
+        facet_kwargs={
+            "row": alt.Row(
+                "geography",
+                header=alt.Header(labelFontSize=20),
+                title="",
+                sort=["South Dakota", "North Dakota"],
+            ),
+            "column": alt.Column(
+                "forecast_date", header=alt.Header(labelFontSize=20), title=""
+            ),
+        },
+        config_axis_kwargs={"labelFontSize": 20, "titleFontSize": 24},
+        out_dir=out_dir,
+        filename="examples_LPL.svg",
+    )
+
+    ## forecast the good state and bad state in RFModel ##
+    plot_data_cone(
+        chart_data=chart_data.filter(
+            pl.col("geography").is_in(["Wyoming", "Vermont"]),
+            pl.col("model") == pl.lit("RFModel"),
+        ),
+        facet_kwargs={
+            "row": alt.Row(
+                "geography",
+                header=alt.Header(labelFontSize=20),
+                title="",
+                sort=["Wyoming", "Vermont"],
+            ),
+            "column": alt.Column(
+                "forecast_date", header=alt.Header(labelFontSize=20), title=""
+            ),
+        },
+        config_axis_kwargs={"labelFontSize": 20, "titleFontSize": 24},
+        out_dir=out_dir,
+        filename="examples_RF.svg",
+    )
 
     out_flag.touch()
