@@ -43,4 +43,25 @@ if __name__ == "__main__":
 
     line_chart.save(out_dir / "scores.svg")
 
+    ## boxplot of scores across states by forecast date ##
+    alt.Chart(scores).mark_boxplot(ticks=True).encode(
+        x=alt.X(
+            "model",
+            title=None,
+            axis=alt.Axis(labels=False, ticks=False),
+            scale=alt.Scale(padding=1),
+        ),
+        y=alt.Y("score_value", title="End-of-season Abs Diff"),
+        color="model",
+        column=alt.Column(
+            "forecast_date",
+            title="",
+            header=alt.Header(orient="bottom", labelFontSize=20, format="%b"),
+        ),
+    ).properties(width=80, height=400).configure_facet(spacing=0).configure_view(
+        stroke=None
+    ).configure_axis(labelFontSize=20, titleFontSize=24).configure_legend(
+        labelFontSize=20, title=None
+    ).save(out_dir / "scores_boxplot.svg")
+
     out_flag.touch()
