@@ -1,0 +1,3 @@
+[tasks]
+vignette = "make -j4 CONFIG=scripts/config_vignette.yaml"
+full = "make -j4 CONFIG=scripts/config_full.yaml"

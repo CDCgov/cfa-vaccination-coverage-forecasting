@@ -1,6 +1,6 @@
 # Vaccination coverage forecasting
 
-_Formerly known as Immunization Uptake Projections, or `vcf`._
+_Formerly known as Immunization Uptake Projections, or `iup`._
 
 ## Getting started
 
@@ -22,9 +22,8 @@ The vignette uses monthly estimates of season flu vaccination coverage, from the
 
 ### Running the vignette
 
-1. Run the pipeline with `make`. (You can run steps in parallel with, e.g., `make -j4`.)
-   - By default, `make` will use `scripts/config_vignette.yaml` for its configuration.
-   - You can use different configs by running `make CONFIG=/path/to/config.yaml`.
+1. Run the pipeline with `mise run vignette`.
+   - Inspect `mise.toml` for how to use `make` to run with different numbers of threads and different configs.
 2. Inspect `output/vignette/`:
    - `config.yaml`: a copy of the input config
    - `data.parquet`: the preprocessed, observed data
