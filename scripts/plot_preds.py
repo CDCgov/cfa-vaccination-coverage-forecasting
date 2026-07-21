@@ -9,27 +9,32 @@ from plot_data import AXIS_PERCENT
 import vcf
 
 LINE_OPACITY = 0.4
+MODEL_COLOR_SCALE = alt.Scale(
+    domain=["LPLModel", "RFModel"], range=["#a6611a", "#018571"]
+)
 
 
 def plot_data_cone(
     chart_data: pl.DataFrame,
     facet_kwargs: dict,
-    out_dir: str,
+    out_dir: Path,
     filename: str,
     properties_kwargs: dict | None = None,
     config_legend_kwargs: dict | None = None,
     config_axis_kwargs: dict | None = None,
 ):
     base = alt.Chart(chart_data).encode(
-        alt.X("time_end", title=None, axis=alt.Axis(format="%b"))
+        alt.X("time_end", title=None, axis=alt.Axis(format="%b", grid=False))
     )
     fc_cone = base.mark_area(opacity=0.25).encode(
-        alt.Y("pred_lci", title="", axis=AXIS_PERCENT),
+        alt.Y(
+            "pred_lci", title="", axis=AXIS_PERCENT, scale=alt.Scale(domain=(0.0, 0.70))
+        ),
         alt.Y2("pred_uci"),
-        alt.Color("model"),
+        alt.Color("model", scale=MODEL_COLOR_SCALE),
     )
     fc_points = base.mark_line(opacity=0.75).encode(
-        alt.Y("pred_estimate"), alt.Color("model")
+        alt.Y("pred_estimate"), alt.Color("model", scale=MODEL_COLOR_SCALE)
     )
     data_points = base.mark_point(color="black").encode(alt.Y("obs_estimate"))
     data_error = base.mark_rule(color="black").encode(
@@ -135,7 +140,7 @@ if __name__ == "__main__":
     plot_data_cone(
         chart_data=chart_data,
         facet_kwargs={
-            "column": "forecast_date",
+            "column": alt.Column("forecast_date", header=alt.Header(format="%b %Y")),
             "row": "geography",
         },
         out_dir=out_dir,
@@ -174,7 +179,9 @@ if __name__ == "__main__":
                 sort=["South Dakota", "North Dakota"],
             ),
             "column": alt.Column(
-                "forecast_date", header=alt.Header(labelFontSize=20), title=""
+                "forecast_date",
+                header=alt.Header(format="%b %Y", labelFontSize=20),
+                title="",
             ),
         },
         config_axis_kwargs={"labelFontSize": 20, "titleFontSize": 24},
@@ -196,7 +203,9 @@ if __name__ == "__main__":
                 sort=["Wyoming", "Vermont"],
             ),
             "column": alt.Column(
-                "forecast_date", header=alt.Header(labelFontSize=20), title=""
+                "forecast_date",
+                header=alt.Header(format="%b %Y", labelFontSize=20),
+                title="",
             ),
         },
         config_axis_kwargs={"labelFontSize": 20, "titleFontSize": 24},
