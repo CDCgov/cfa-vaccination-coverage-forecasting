@@ -4,6 +4,7 @@ from pathlib import Path
 import altair as alt
 import polars as pl
 import yaml
+from plot_preds import MODEL_COLOR_SCALE
 
 LINE_OPACITY = 0.4
 
@@ -26,34 +27,17 @@ if __name__ == "__main__":
     out_dir = out_flag.parent
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # sis = score in season
-    data = scores.filter(pl.col("score_fun") == pl.lit("eos_abs_diff"))
-
-    base = alt.Chart(data).encode(
-        alt.X("forecast_date", type="temporal", axis=alt.Axis(format="%b"))
-    )
-    line_chart = base.mark_line(point=True, opacity=LINE_OPACITY).encode(
-        alt.Y("score_value", title="Score (abs. end-of-season diff.)"),
-        alt.Detail("geography"),
-        alt.Color("model"),
-    )
-
-    # Filter for the final forecast date and use the gather_n function to
-    # make plots with ticks
-
-    line_chart.save(out_dir / "scores.svg")
-
     ## boxplot of scores across states by forecast date ##
     alt.Chart(scores).mark_boxplot(ticks=True).encode(
-        x=alt.X(
+        alt.X(
             "model",
             title=None,
             axis=alt.Axis(labels=False, ticks=False),
             scale=alt.Scale(padding=1),
         ),
-        y=alt.Y("score_value", title="End-of-season Abs Diff"),
-        color="model",
-        column=alt.Column(
+        alt.Y("score_value", title="End-of-season abs. diff. (p.p.)"),
+        alt.Color("model", scale=MODEL_COLOR_SCALE),
+        alt.Column(
             "forecast_date",
             title="",
             header=alt.Header(orient="bottom", labelFontSize=20, format="%b"),
@@ -62,6 +46,6 @@ if __name__ == "__main__":
         stroke=None
     ).configure_axis(labelFontSize=20, titleFontSize=24).configure_legend(
         labelFontSize=20, title=None
-    ).save(out_dir / "scores_boxplot.svg")
+    ).save(out_dir / "scores.svg")
 
     out_flag.touch()
