@@ -1,5 +1,5 @@
 """
-Render equation block as a png
+Render equation block as an image
 """
 
 import subprocess
