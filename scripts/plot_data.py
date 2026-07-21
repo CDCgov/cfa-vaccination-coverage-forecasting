@@ -8,6 +8,7 @@ import polars as pl
 import yaml
 
 AXIS_PERCENT = alt.Axis(format=".0%")
+SCALE = alt.Scale(domain=(0, 0.70))
 LINE_OPACITY = 0.25
 
 MEDIAN_POINT_KWARGS = {
@@ -18,14 +19,10 @@ MEDIAN_POINT_KWARGS = {
 }
 
 MEDIAN_ENCODINGS = [
-    alt.Color(
-        "type",
-        scale=alt.Scale(domain=["datum", "median"], range=["black", "red"]),
-        legend=None,
-    ),
     alt.Shape(
         "type",
         scale=alt.Scale(domain=["datum", "median"], range=["circle", "stroke"]),
+        legend=None,
     ),
     alt.Size("type", scale=alt.Scale(domain=["datum", "median"], range=[20, 200])),
 ]
@@ -187,20 +184,26 @@ if __name__ == "__main__":
     eos = data.filter((pl.col("time_end") == pl.col("time_end").max()).over("season"))
 
     # for each season, show eos spread over states
-    alt.Chart(add_medians(eos, "season")).mark_point().encode(
+    alt.Chart(eos).mark_boxplot(color="black").encode(
         alt.X("season", title=None),
-        alt.Y("estimate", title="End of season coverage", axis=AXIS_PERCENT),
-        *MEDIAN_ENCODINGS,
+        alt.Y(
+            "estimate", title="End of season coverage", axis=AXIS_PERCENT, scale=SCALE
+        ),
     ).save(out_dir / "coverage_by_season.svg")
 
     # for each state, show eos spread over seasons
-    alt.Chart(add_medians(eos, "geography")).mark_point().encode(
+    alt.Chart(add_medians(eos, "geography")).mark_point(color="black").encode(
         alt.X(
             "geography",
             title=None,
             sort=alt.EncodingSortField("estimate", "median", "descending"),
         ),
-        alt.Y("estimate", title="End of season coverage", axis=AXIS_PERCENT),
+        alt.Y(
+            "estimate",
+            title="End of season coverage",
+            axis=AXIS_PERCENT,
+            scale=SCALE,
+        ),
         *MEDIAN_ENCODINGS,
     ).save(out_dir / "coverage_by_state.svg")
 
