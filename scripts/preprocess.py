@@ -46,6 +46,9 @@ def preprocess(
 
     """
 
+    start_date = pl.date(start_year, season_start_month, season_start_day)
+    end_date = pl.date(end_year, season_end_month, season_end_day)
+
     def geo_filter(df: pl.DataFrame) -> pl.DataFrame:
         """Optionally retain rows belonging to selected geographies."""
         if geographies is None:
@@ -70,8 +73,8 @@ def preprocess(
             )
         )
         .filter(
-            # drop dates before or after the outermost season
-            pl.col(date_col).dt.year().is_between(start_year, end_year),
+            # keep dates only within the desired data range
+            pl.col(date_col).is_between(start_date, end_date),
             # drop out-of-season dates between seasons
             pl.col("season").is_null().not_(),
         )

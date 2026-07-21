@@ -34,10 +34,10 @@ if __name__ == "__main__":
     assert len(forecast_season) == 1, "Can only score forecasts from one season"
     forecast_season = forecast_season[0]
 
-    eos_abs_diff = vcf.eos_abs_diff(
-        obs=data.filter(pl.col("season") == pl.lit(forecast_season)),
-        pred=pred.filter(pl.col("season") == pl.lit(forecast_season)),
-        features=["season", "geography"],
-    )
+    obs = data.filter(pl.col("season") == pl.lit(forecast_season))
+    pred = pred.filter(pl.col("season") == pl.lit(forecast_season))
+    features = ["season", "geography"]
 
-    eos_abs_diff.write_parquet(args.output)
+    scores = vcf.eos_abs_diff(obs=obs, pred=pred, features=features)
+
+    scores.write_parquet(args.output)
