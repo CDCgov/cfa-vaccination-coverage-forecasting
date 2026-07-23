@@ -44,4 +44,9 @@ forecast_dates:
 alpha: 0.05
 
 plots:
-  example_season: "2020/2021"
+  data_trajectories_season: "2020/2021"
+  preds_examples:
+    - model: RFModel
+      geographies: ["Wyoming", "Vermont"]
+    - model: LPLModel
+      geographies: ["South Dakota", "North Dakota"]
