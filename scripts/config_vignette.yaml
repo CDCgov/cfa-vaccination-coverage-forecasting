@@ -45,4 +45,9 @@ forecast_dates:
   interval: 1mo
 
 plots:
-  example_season: "2021/2022"
+  data_trajectories_season: "2021/2022"
+  preds_examples:
+    - model: RFModel
+      geographies: ["Alaska"]
+    - model: LPLModel
+      geographies: ["Alaska"]

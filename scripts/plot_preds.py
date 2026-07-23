@@ -58,6 +58,31 @@ def plot_data_cone(
     chart.save(out_path)
 
 
+def plot_example(data: pl.DataFrame, model: str, geographies: list[str], out_dir: Path):
+    plot_data_cone(
+        chart_data=data.filter(
+            pl.col("geography").is_in(geographies),
+            pl.col("model") == pl.lit(model),
+        ),
+        facet_kwargs={
+            "row": alt.Row(
+                "geography",
+                header=alt.Header(labelFontSize=20),
+                title="",
+                sort=geographies,
+            ),
+            "column": alt.Column(
+                "forecast_date",
+                header=alt.Header(format="%b %Y", labelFontSize=20),
+                title="",
+            ),
+        },
+        config_axis_kwargs={"labelFontSize": 20, "titleFontSize": 24},
+        out_dir=out_dir,
+        filename=f"examples_{model}.svg",
+    )
+
+
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--config", required=True)
@@ -165,52 +190,13 @@ if __name__ == "__main__":
         filename="forecast_entire_season.svg",
     )
 
-    ## forecast the good state and bad state in LPLModel ##
-    plot_data_cone(
-        chart_data=chart_data.filter(
-            pl.col("geography").is_in(["South Dakota", "North Dakota"]),
-            pl.col("model") == pl.lit("LPLModel"),
-        ),
-        facet_kwargs={
-            "row": alt.Row(
-                "geography",
-                header=alt.Header(labelFontSize=20),
-                title="",
-                sort=["South Dakota", "North Dakota"],
-            ),
-            "column": alt.Column(
-                "forecast_date",
-                header=alt.Header(format="%b %Y", labelFontSize=20),
-                title="",
-            ),
-        },
-        config_axis_kwargs={"labelFontSize": 20, "titleFontSize": 24},
-        out_dir=out_dir,
-        filename="examples_LPL.svg",
-    )
-
-    ## forecast the good state and bad state in RFModel ##
-    plot_data_cone(
-        chart_data=chart_data.filter(
-            pl.col("geography").is_in(["Wyoming", "Vermont"]),
-            pl.col("model") == pl.lit("RFModel"),
-        ),
-        facet_kwargs={
-            "row": alt.Row(
-                "geography",
-                header=alt.Header(labelFontSize=20),
-                title="",
-                sort=["Wyoming", "Vermont"],
-            ),
-            "column": alt.Column(
-                "forecast_date",
-                header=alt.Header(format="%b %Y", labelFontSize=20),
-                title="",
-            ),
-        },
-        config_axis_kwargs={"labelFontSize": 20, "titleFontSize": 24},
-        out_dir=out_dir,
-        filename="examples_RF.svg",
-    )
+    # forecast the examples for each model
+    for example in config["plots"]["preds_examples"]:
+        plot_example(
+            data=chart_data,
+            model=example["model"],
+            geographies=example["geographies"],
+            out_dir=out_dir,
+        )
 
     out_flag.touch()
