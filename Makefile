@@ -27,8 +27,6 @@ endif
 # So we need `forecast_date$(EQ)%`.
 EQ = =
 
-.PHONY: clean viz dx
-
 all: $(CONFIG_COPY) $(PLOT_DATA) $(PLOT_PREDS) $(PLOT_SCORES) $(FITS)
 
 $(PLOT_SCORES): scripts/plot_scores.py $(SCORES) $(CONFIG)
@@ -56,6 +54,3 @@ $(DATA): scripts/preprocess.py $(RAW_DATA) $(CONFIG)
 $(CONFIG_COPY): $(CONFIG)
 	mkdir -p $(OUTPUT_DIR)
 	cp $(CONFIG) $@
-
-clean:
-	rm -rf $(OUTPUT_DIR)
