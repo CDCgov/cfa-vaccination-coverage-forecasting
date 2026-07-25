@@ -476,12 +476,13 @@ class RFModel(CoverageModel):
         # preprocessing
         self.date_crosswalk = data_t.select("season", date_column, "t").unique()
 
-        self.data = (
+        self.data_no_impute = (
             data_t.select(["season", "geography", "t", "estimate"])
             .pivot(on="t", values="estimate", sort_columns=True)
             .sort(["season", "geography"])
-            .pipe(self._impute)
         )
+
+        self.data = self._impute(self.data_no_impute)
 
         self.forecast_season = pl.select(
             to_season(
