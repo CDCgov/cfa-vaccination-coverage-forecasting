@@ -7,6 +7,7 @@ CONFIG_COPY = $(OUTPUT_DIR)/config.yaml
 DATA = $(OUTPUT_DIR)/data.parquet
 PRED_DIR = $(OUTPUT_DIR)/pred
 SCORES = $(OUTPUT_DIR)/scores.parquet
+COUNT_MISSING = $(OUTPUT_DIR)/missing_report.txt
 
 # each plotting script outputs multiple files; use a single output as a flag
 PLOT_DATA = $(OUTPUT_DIR)/plots/.data.checkpoint
@@ -27,7 +28,10 @@ endif
 # So we need `forecast_date$(EQ)%`.
 EQ = =
 
-all: $(CONFIG_COPY) $(PLOT_DATA) $(PLOT_PREDS) $(PLOT_SCORES) $(FITS)
+all: $(CONFIG_COPY) $(PLOT_DATA) $(PLOT_PREDS) $(PLOT_SCORES) $(FITS) $(COUNT_MISSING)
+
+$(COUNT_MISSING): scripts/count_missing.py $(DATA) $(CONFIG)
+	python $< --data=$(DATA) --config=$(CONFIG) --output=$@
 
 $(PLOT_SCORES): scripts/plot_scores.py $(SCORES) $(CONFIG)
 	python $< --scores=$(SCORES) --config=$(CONFIG) --output=$@
