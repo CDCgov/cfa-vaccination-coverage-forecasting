@@ -1,6 +1,6 @@
 # Vaccination coverage forecasting
 
-_Formerly known as Immunization Uptake Projections, or `iup`._
+[![DOI](https://zenodo.org/badge/858765192.svg)](https://doi.org/10.5281/zenodo.18089774)
 
 ## Getting started
 
@@ -57,6 +57,10 @@ pred --> viz;
 scores --> viz;
 viz --> plots;
 ```
+
+## Admins
+
+- Scott Olesen (CFA) <ulp7@cdc.gov>
 
 ## Disclaimers
 
