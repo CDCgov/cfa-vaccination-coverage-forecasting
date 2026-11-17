@@ -1,7 +1,6 @@
 import argparse
 from datetime import date
 from pathlib import Path
-from typing import List, Optional
 
 import polars as pl
 import yaml
@@ -17,7 +16,7 @@ def preprocess(
     season_start_day: int,
     season_end_month: int,
     season_end_day: int,
-    geographies: Optional[List[str] | None],
+    geographies: list[str] | None,
     date_col: str = "time_end",
 ) -> pl.DataFrame:
     """

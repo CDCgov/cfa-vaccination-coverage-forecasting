@@ -9,7 +9,7 @@ import argparse
 import datetime as dt
 import pickle as pkl
 from pathlib import Path
-from typing import Any, Tuple
+from typing import Any
 
 import polars as pl
 import yaml
@@ -19,7 +19,7 @@ import vcf
 
 def fit_all_models(
     data: pl.DataFrame, forecast_date: dt.date, config: dict[str, Any]
-) -> dict[Tuple[str, dt.date], vcf.CoverageModel]:
+) -> dict[tuple[str, dt.date], vcf.CoverageModel]:
     """Run all forecasts.
 
     Args:

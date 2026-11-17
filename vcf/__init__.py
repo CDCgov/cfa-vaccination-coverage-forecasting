@@ -115,7 +115,6 @@ class CoverageModel(abc.ABC):
             season: Seasonal boundary configuration (start/end month/day).
             quantiles: Quantiles to return during prediction.
         """
-        pass
 
     @abc.abstractmethod
     def fit(self) -> Self:
@@ -124,7 +123,6 @@ class CoverageModel(abc.ABC):
         Returns:
             Fitted model instance.
         """
-        pass
 
     @abc.abstractmethod
     def predict(self) -> pl.DataFrame:
@@ -133,7 +131,6 @@ class CoverageModel(abc.ABC):
         Returns:
             Data frame containing forecasts and identifying metadata.
         """
-        pass
 
 
 class LPLModel(CoverageModel):
@@ -387,7 +384,7 @@ class LPLModel(CoverageModel):
             self.data.filter(pl.col(self.date_column) <= self.forecast_date),
         )
 
-        if "progress_bar" in self.mcmc_params and self.mcmc_params["progress_bar"]:
+        if self.mcmc_params.get("progress_bar"):
             self.mcmc.print_summary()
 
         return self
@@ -554,7 +551,7 @@ class RFModel(CoverageModel):
 
         self.X_features = ["season", "geography"] + [
             str(t)
-            for t in range(0, self.forecast_month + 1)
+            for t in range(self.forecast_month + 1)
             if str(t) in self.data.columns
         ]
         self.y_features = [

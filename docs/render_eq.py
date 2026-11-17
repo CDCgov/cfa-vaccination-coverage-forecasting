@@ -31,16 +31,12 @@ def get_eqn(path="docs/lpl.md") -> str:
 
 def latex_to_png(latex_str: str, out_path: str, dpi: int = 400, verbose: bool = False):
     """Render `latex_str` using pdflatex"""
-    content = (
-        r"""
-\documentclass[preview,border=2pt]{standalone}
-\usepackage{amsmath,amssymb}
-\begin{document}
-%s
-\end{document}
+    content = f"""\\documentclass[preview,border=2pt]{{standalone}}
+\\usepackage{{amsmath,amssymb}}
+\\begin{{document}}
+{latex_str}
+\\end{{document}}
 """
-        % latex_str
-    )
 
     with tempfile.TemporaryDirectory() as td:
         path = Path(td) / "eq.tex"
@@ -54,6 +50,7 @@ def latex_to_png(latex_str: str, out_path: str, dpi: int = 400, verbose: bool = 
                 str(path),
             ],
             capture_output=True,
+            check=False,
         )
 
         if verbose:
