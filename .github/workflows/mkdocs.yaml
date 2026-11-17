@@ -16,7 +16,8 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # setup-python has no Ubuntu 26.04 build for the pinned Python version.
+    runs-on: ubuntu-24.04
     outputs:
       page_artifact_id: ${{ steps.upload.outputs.artifact_id }}
     steps:
