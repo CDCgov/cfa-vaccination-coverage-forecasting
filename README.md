@@ -2,6 +2,8 @@
 
 [![DOI](https://zenodo.org/badge/858765192.svg)](https://doi.org/10.5281/zenodo.18089774)
 
+Supporting code for [Schrom et al. "White paper: Vaccination coverage forecasting" (2026)](https://stacks.cdc.gov/view/cdc/263242)
+
 ## Getting started
 
 1. Read the docs at <https://cdcgov.github.io/cfa-vaccination-coverage-forecasting>, or build them locally with `mkdocs serve`
